@@ -2,9 +2,21 @@ namespace MF.OrderManagement.Application.Orders.DTOs;
 
 public sealed class CreateOrderRequest
 {
-    public Guid CustomerId { get; init; }
-    public Guid PaymentConditionId { get; init; }
+    public CreateCustomerRequest Customer { get; init; } = new();
+    public CreatePaymentConditionRequest PaymentCondition { get; init; } = new();
     public List<CreateOrderItemRequest> Items { get; init; } = new();
+}
+
+public sealed class CreateCustomerRequest
+{
+    public string Name { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+}
+
+public sealed class CreatePaymentConditionRequest
+{
+    public string Description { get; init; } = string.Empty;
+    public int NumberOfInstallments { get; init; }
 }
 
 public sealed class CreateOrderItemRequest

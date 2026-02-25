@@ -4,5 +4,6 @@ namespace MF.OrderManagement.Application.Orders.Ports;
 
 public interface ICustomerRepository
 {
-    Task<Customer?> GetByIdAsync(Guid customerId, CancellationToken ct = default);
+    Task AddAsync(Customer customer, CancellationToken ct = default);
+    Task<Customer?> GetByEmailAsync(string email, CancellationToken ct = default);
 }

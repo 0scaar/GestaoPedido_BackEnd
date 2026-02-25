@@ -4,5 +4,6 @@ namespace MF.OrderManagement.Application.Orders.Ports;
 
 public interface IPaymentConditionRepository
 {
-    Task<PaymentCondition?> GetByIdAsync(Guid paymentConditionId, CancellationToken ct = default);
+    Task AddAsync(PaymentCondition paymentCondition, CancellationToken ct = default);
+    Task<PaymentCondition?> GetByDescriptionAsync(string description, CancellationToken ct = default);
 }

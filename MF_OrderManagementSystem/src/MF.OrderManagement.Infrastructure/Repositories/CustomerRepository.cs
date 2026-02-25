@@ -7,6 +7,9 @@ namespace MF.OrderManagement.Infrastructure.Repositories;
 
 public sealed class CustomerRepository(OrdersDbContext db) : ICustomerRepository
 {
-    public Task<Customer?> GetByIdAsync(Guid customerId, CancellationToken ct = default)
-        => db.Customers.FirstOrDefaultAsync(x => x.Id == customerId, ct);
+    public async Task AddAsync(Customer customer, CancellationToken ct = default)
+        => await db.Customers.AddAsync(customer, ct);
+    
+    public Task<Customer?> GetByEmailAsync(string email, CancellationToken ct = default)
+        => db.Customers.FirstOrDefaultAsync(x => x.Email == email, ct);
 }

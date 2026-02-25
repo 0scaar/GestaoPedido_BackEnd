@@ -7,6 +7,9 @@ namespace MF.OrderManagement.Infrastructure.Repositories;
 
 public sealed class PaymentConditionRepository(OrdersDbContext db) : IPaymentConditionRepository
 {
-    public Task<PaymentCondition?> GetByIdAsync(Guid paymentConditionId, CancellationToken ct = default)
-        => db.PaymentConditions.FirstOrDefaultAsync(x => x.Id == paymentConditionId, ct);
+    public async Task AddAsync(PaymentCondition paymentCondition, CancellationToken ct = default)
+        => await db.PaymentConditions.AddAsync(paymentCondition, ct);
+
+    public Task<PaymentCondition?> GetByDescriptionAsync(string description, CancellationToken ct = default)
+        => db.PaymentConditions.FirstOrDefaultAsync(x => x.Description == description, ct);
 }

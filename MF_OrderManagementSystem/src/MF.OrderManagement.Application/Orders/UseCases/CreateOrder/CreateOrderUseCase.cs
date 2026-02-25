@@ -2,73 +2,70 @@ using MF.OrderManagement.Application.Common.Abstractions;
 using MF.OrderManagement.Application.Common.Exceptions;
 using MF.OrderManagement.Application.Orders.DTOs;
 using MF.OrderManagement.Application.Orders.Ports;
+using MF.OrderManagement.Domain.Entities.Customers;
 using MF.OrderManagement.Domain.Entities.Orders;
+using MF.OrderManagement.Domain.Entities.Payments;
 
 namespace MF.OrderManagement.Application.Orders.UseCases.CreateOrder;
 
-public sealed class CreateOrderUseCase
+public sealed class CreateOrderUseCase(
+    IOrderRepository orders,
+    ICustomerRepository customers,
+    IPaymentConditionRepository paymentConditions,
+    IUnitOfWork uow,
+    IMessageBus bus,
+    IDateTimeProvider clock)
 {
-    private readonly IOrderRepository _orders;
-    private readonly ICustomerRepository _customers;
-    private readonly IPaymentConditionRepository _paymentConditions;
-    private readonly IUnitOfWork _uow;
-    private readonly IMessageBus _bus;
-    private readonly IDateTimeProvider _clock;
-
-    public CreateOrderUseCase(
-        IOrderRepository orders,
-        ICustomerRepository customers,
-        IPaymentConditionRepository paymentConditions,
-        IUnitOfWork uow,
-        IMessageBus bus,
-        IDateTimeProvider clock)
-    {
-        _orders = orders;
-        _customers = customers;
-        _paymentConditions = paymentConditions;
-        _uow = uow;
-        _bus = bus;
-        _clock = clock;
-    }
-    
     public async Task<CreateOrderResultDto> ExecuteAsync(CreateOrderRequest request, CancellationToken ct = default)
     {
-        // Validações básicas na Application (rápidas)
-        if (request.CustomerId == Guid.Empty)
-            throw new ApplicationExceptionBaseImpl("CustomerId is required.");
-
-        if (request.PaymentConditionId == Guid.Empty)
-            throw new ApplicationExceptionBaseImpl("PaymentConditionId is required.");
-
-        if (request.Items is null || request.Items.Count == 0)
-            throw new ApplicationExceptionBaseImpl("Order must have at least one item.");
-
-        // Valida se referencias existem (opcional, mas bom)
-        var customer = await _customers.GetByIdAsync(request.CustomerId, ct);
+        if (request.Customer is null) throw new BadRequest("Customer is required.");
+        if (request.PaymentCondition is null) throw new BadRequest("PaymentCondition is required.");
+        if (request.Items is null || request.Items.Count == 0) throw new BadRequest("Order must have at least one item.");
+        
+        if (string.IsNullOrWhiteSpace(request.Customer.Name)) throw new BadRequest("Customer.Name is required.");
+        if (string.IsNullOrWhiteSpace(request.Customer.Email)) throw new BadRequest("Customer.Email is required.");
+        if (string.IsNullOrWhiteSpace(request.PaymentCondition.Description)) throw new BadRequest("PaymentCondition.Description is required.");
+        if (request.PaymentCondition.NumberOfInstallments <= 0) throw new BadRequest("PaymentCondition.NumberOfInstallments must be > 0.");
+        
+        var customer = await customers.GetByEmailAsync(request.Customer.Email, ct);
         if (customer is null)
-            throw new NotFoundException($"Customer '{request.CustomerId}' not found.");
-
-        var payment = await _paymentConditions.GetByIdAsync(request.PaymentConditionId, ct);
+        {
+            customer = new Customer(
+                id: Guid.NewGuid(),
+                name: request.Customer.Name,
+                email: request.Customer.Email
+            );
+            await customers.AddAsync(customer, ct);
+        }
+        
+        var payment = await paymentConditions.GetByDescriptionAsync(request.PaymentCondition.Description, ct);
         if (payment is null)
-            throw new NotFoundException($"PaymentCondition '{request.PaymentConditionId}' not found.");
+        {
+            payment = new PaymentCondition(
+                id: Guid.NewGuid(),
+                description: request.PaymentCondition.Description,
+                numberOfInstallments: request.PaymentCondition.NumberOfInstallments
+            );
+            await paymentConditions.AddAsync(payment, ct);
+        }
 
         // Cria aggregate no Domain (a regra dos 5000 fica lá)
         var order = Order.Create(
             id: Guid.NewGuid(),
-            customerId: request.CustomerId,
-            paymentConditionId: request.PaymentConditionId,
-            orderDate: _clock.UtcNow,
+            customerId: customer.Id,
+            paymentConditionId: payment.Id,
+            orderDate: clock.UtcNow,
             items: request.Items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice))
         );
 
-        await _orders.AddAsync(order, ct);
-        await _uow.SaveChangesAsync(ct);
+        await orders.AddAsync(order, ct);
+        await uow.SaveChangesAsync(ct);
 
         // Publica mensagem para o Worker
-        await _bus.PublishAsync(new OrderCreatedMessage
+        await bus.PublishAsync(new OrderCreatedMessage
         {
             OrderId = order.Id,
-            OccurredAtUtc = _clock.UtcNow
+            OccurredAtUtc = clock.UtcNow
         }, ct);
 
         return new CreateOrderResultDto
@@ -80,10 +77,9 @@ public sealed class CreateOrderUseCase
         };
     }
     
-    // Exceção simples só pra não criar mil classes agora
-    private sealed class ApplicationExceptionBaseImpl : ApplicationExceptionBase
+    private sealed class BadRequest : ApplicationExceptionBase
     {
-        public ApplicationExceptionBaseImpl(string message) : base(message) { }
+        public BadRequest(string message) : base(message) { }
     }
 }
 
