@@ -1,0 +1,40 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  orders-api:
+    build:
+      context: "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem"
+      dockerfile: "src/MF.OrderManagement.Api/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/MF.OrderManagement.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "mf.ordermanagement.api:dev"
+    ports: []
+    volumes:
+    - "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem/src/MF.OrderManagement.Api:/app:rw"
+    - "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem:/src:rw"
+    - "/Users/oscarloma/.nuget/packages:/home/app/.nuget/packages"
+    working_dir: "/app"
+  orders-worker:
+    build:
+      context: "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem"
+      dockerfile: "src/MF.OrderManagement.Worker/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/MF.OrderManagement.Worker.dll"
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "mf.ordermanagement.worker:dev"
+    ports: []
+    volumes:
+    - "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem/src/MF.OrderManagement.Worker:/app:rw"
+    - "/Users/oscarloma/Documents/Personal_Projects/MinervaFood/GestaoPedido_BackEnd/MF_OrderManagementSystem:/src:rw"
+    - "/Users/oscarloma/.nuget/packages:/home/app/.nuget/packages"
+    working_dir: "/app"

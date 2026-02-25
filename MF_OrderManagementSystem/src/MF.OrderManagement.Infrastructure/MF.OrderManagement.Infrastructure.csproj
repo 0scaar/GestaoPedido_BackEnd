@@ -6,4 +6,22 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+      <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
+      <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MF.OrderManagement.Application\MF.OrderManagement.Application.csproj" />
+      <ProjectReference Include="..\MF.OrderManagement.Domain\MF.OrderManagement.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

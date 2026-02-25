@@ -1,0 +1,84 @@
+﻿services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: orders-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-P@ssw0rd}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$MSSQL_SA_PASSWORD -Q 'SELECT 1' -C || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: orders-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      
+  orders-api:
+    build:
+      context: .
+      dockerfile: src/MF.OrderManagement.Api/Dockerfile
+    container_name: orders-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__OrdersDb=Server=sqlserver,1433;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-P@ssw0rd};TrustServerCertificate=True;
+      - Auth__Username=admin
+      - Auth__Password=admin123
+      - Jwt__Issuer=Orders
+      - Jwt__Audience=OrdersClients
+      - Jwt__SigningKey=817fe456-0120-4b6d-b967-c9ad636f5ae2
+      - Jwt__ExpirationMinutes=60
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Port=5672
+      - RabbitMq__Username=${RABBITMQ_USER:-guest}
+      - RabbitMq__Password=${RABBITMQ_PASS:-guest}
+      - RabbitMq__Exchange=orders
+      - RabbitMq__Queue=orders.order-created
+      - RabbitMq__RoutingKey=orders.order-created
+    ports:
+      - "8080:8080"
+        
+  orders-worker:
+    build:
+      context: .
+      dockerfile: src/MF.OrderManagement.Worker/Dockerfile
+    container_name: orders-worker
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__OrdersDb=Server=sqlserver,1433;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-P@ssw0rd};TrustServerCertificate=True;
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Port=5672
+      - RabbitMq__Username=${RABBITMQ_USER:-guest}
+      - RabbitMq__Password=${RABBITMQ_PASS:-guest}
+      - RabbitMq__Exchange=orders
+      - RabbitMq__Queue=orders.order-created
+      - RabbitMq__RoutingKey=orders.order-created
+
+volumes:
+  sql_data:
