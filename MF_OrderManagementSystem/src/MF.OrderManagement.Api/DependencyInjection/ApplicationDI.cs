@@ -14,6 +14,7 @@ public static class ApplicationDI
         services.AddScoped<CreateOrderUseCase>();
         services.AddScoped<ApproveOrderUseCase>();
         services.AddScoped<GetOrdersUseCase>();
+        services.AddScoped<GetOrderByIdUseCase>();
 
         services.AddScoped<IValidator<CreateOrderRequest>, CreateOrderRequestValidator>();
 

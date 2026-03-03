@@ -13,6 +13,7 @@ namespace MF.OrderManagement.Api.Controllers;
 public class OrdersController(
     CreateOrderUseCase create,
     GetOrdersUseCase get,
+    GetOrderByIdUseCase getById,
     ApproveOrderUseCase approve)
     : ControllerBase
 {
@@ -29,15 +30,11 @@ public class OrdersController(
         var list = await get.ExecuteAsync(ct);
         return Ok(list);
     }
-
-    // Extra: GetById simples (útil para CreatedAtAction)
+    
     [HttpGet("{orderId:guid}")]
     public async Task<ActionResult<OrderListItemDto>> GetById([FromRoute] Guid orderId, CancellationToken ct)
     {
-        // para manter simples sem criar use case específico:
-        var list = await get.ExecuteAsync(ct);
-        var item = list.FirstOrDefault(x => x.OrderId == orderId);
-        if (item is null) return NotFound();
+        var item = await getById.ExecuteAsync(orderId,  ct);
         return Ok(item);
     }
 

@@ -4,6 +4,7 @@ using MF.OrderManagement.Infrastructure.Auth;
 using MF.OrderManagement.Infrastructure.Common;
 using MF.OrderManagement.Infrastructure.Messaging;
 using MF.OrderManagement.Infrastructure.Persistence;
+using MF.OrderManagement.Infrastructure.Queries;
 using MF.OrderManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IPaymentConditionRepository, PaymentConditionRepository>();
+        services.AddScoped<IOrderQueries, OrderQueries>();
         
         services.Configure<JwtOptions>(config.GetSection("Jwt"));
         services.AddSingleton<ITokenService, JwtTokenService>();
