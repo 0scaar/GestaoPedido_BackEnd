@@ -1,4 +1,4 @@
-# Orders System 
+# Sistema de Gestão de Pedidos 
 
 A solução foi construída com foco em **boas práticas de arquitetura, testabilidade, escalabilidade e separação de responsabilidades**, utilizando .NET, SQL Server e RabbitMQ.
 
