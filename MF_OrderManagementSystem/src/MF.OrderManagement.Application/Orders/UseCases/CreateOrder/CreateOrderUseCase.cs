@@ -1,14 +1,16 @@
+using FluentValidation;
 using MF.OrderManagement.Application.Common.Abstractions;
-using MF.OrderManagement.Application.Common.Exceptions;
 using MF.OrderManagement.Application.Orders.DTOs;
 using MF.OrderManagement.Application.Orders.Ports;
 using MF.OrderManagement.Domain.Entities.Customers;
 using MF.OrderManagement.Domain.Entities.Orders;
 using MF.OrderManagement.Domain.Entities.Payments;
+using ValidationException = MF.OrderManagement.Application.Common.Exceptions.ValidationException;
 
 namespace MF.OrderManagement.Application.Orders.UseCases.CreateOrder;
 
 public sealed class CreateOrderUseCase(
+    IValidator<CreateOrderRequest> validator,
     IOrderRepository orders,
     ICustomerRepository customers,
     IPaymentConditionRepository paymentConditions,
@@ -18,14 +20,9 @@ public sealed class CreateOrderUseCase(
 {
     public async Task<CreateOrderResultDto> ExecuteAsync(CreateOrderRequest request, CancellationToken ct = default)
     {
-        if (request.Customer is null) throw new BadRequest("Customer is required.");
-        if (request.PaymentCondition is null) throw new BadRequest("PaymentCondition is required.");
-        if (request.Items is null || request.Items.Count == 0) throw new BadRequest("Order must have at least one item.");
-        
-        if (string.IsNullOrWhiteSpace(request.Customer.Name)) throw new BadRequest("Customer.Name is required.");
-        if (string.IsNullOrWhiteSpace(request.Customer.Email)) throw new BadRequest("Customer.Email is required.");
-        if (string.IsNullOrWhiteSpace(request.PaymentCondition.Description)) throw new BadRequest("PaymentCondition.Description is required.");
-        if (request.PaymentCondition.NumberOfInstallments <= 0) throw new BadRequest("PaymentCondition.NumberOfInstallments must be > 0.");
+        var validation = await validator.ValidateAsync(request, ct);
+        if (!validation.IsValid)
+            throw new ValidationException(validation.Errors);
         
         var customer = await customers.GetByEmailAsync(request.Customer.Email, ct);
         if (customer is null)
@@ -75,11 +72,6 @@ public sealed class CreateOrderUseCase(
             Status = order.Status.ToString(),
             RequiresManualApproval = order.RequiresManualApproval
         };
-    }
-    
-    private sealed class BadRequest : ApplicationExceptionBase
-    {
-        public BadRequest(string message) : base(message) { }
     }
 }
 

@@ -53,8 +53,7 @@ public sealed class Order : AggregateRoot
             order.AddItem(item.ProductName, item.Quantity, item.UnitPrice);
 
         order.RecalculateTotalsAndApplyBusinessRules();
-
-        // Evento de domínio: pedido criado
+        
         order.AddDomainEvent(DomainEvent.Create((eventId, occurredAt) =>
             new OrderCreatedDomainEvent(eventId, occurredAt, order.Id)));
 

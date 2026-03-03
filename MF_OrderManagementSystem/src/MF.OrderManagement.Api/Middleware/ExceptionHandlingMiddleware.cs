@@ -16,6 +16,21 @@ public sealed class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddlew
         {
             await WriteError(context, HttpStatusCode.NotFound, ex.Message);
         }
+        catch (ValidationException ex)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 400;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                error = "Validation failed.",
+                details = ex.Errors.Select(e => new
+                {
+                    field = e.PropertyName,
+                    message = e.ErrorMessage
+                })
+            });
+        }
         catch (DomainException ex)
         {
             // regra de negócio / domínio -> 400
