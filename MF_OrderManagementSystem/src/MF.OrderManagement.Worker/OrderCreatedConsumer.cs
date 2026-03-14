@@ -113,7 +113,6 @@ public class OrderCreatedConsumer: BackgroundService
         }
         catch
         {
-            // Requeue = true: tenta de novo (pra desafio ok)
             _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
         }
     }

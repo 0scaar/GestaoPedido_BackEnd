@@ -27,8 +27,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
 
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
-
-        // exchange + queue + bind
+        
         _channel.ExchangeDeclare(exchange: _opt.Exchange, type: ExchangeType.Direct, durable: true, autoDelete: false);
         _channel.QueueDeclare(queue: _opt.Queue, durable: true, exclusive: false, autoDelete: false);
         _channel.QueueBind(queue: _opt.Queue, exchange: _opt.Exchange, routingKey: _opt.RoutingKey);
@@ -40,7 +39,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
         var body = Encoding.UTF8.GetBytes(json);
 
         var props = _channel.CreateBasicProperties();
-        props.Persistent = true; // mensagem persistente
+        props.Persistent = true; 
 
         _channel.BasicPublish(
             exchange: _opt.Exchange,

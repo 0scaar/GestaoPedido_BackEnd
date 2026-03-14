@@ -10,12 +10,6 @@ public sealed class PaymentCondition : Entity
     
     public PaymentCondition(Guid id, string description, int numberOfInstallments) : base(id)
     {
-        // if (string.IsNullOrWhiteSpace(description))
-        //     throw new DomainException("Payment condition description is required.");
-        //
-        // if (numberOfInstallments <= 0)
-        //     throw new DomainException("Number of installments must be greater than zero.");
-
         Description = description.Trim();
         NumberOfInstallments = numberOfInstallments;
         CreatedAt = DateTime.UtcNow;
