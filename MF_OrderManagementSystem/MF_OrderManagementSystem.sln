@@ -21,6 +21,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MF.OrderManagement.Worker", "src\MF.OrderManagement.Worker\MF.OrderManagement.Worker.csproj", "{F4FAF308-5180-4016-A7A2-90E786B49518}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "env", "env", "{6DBA090D-4A9D-4F50-8A4A-5374BA599092}"
+	ProjectSection(SolutionItems) = preProject
+		env\connections.env = env\connections.env
+		env\jwt_config.env = env\jwt_config.env
+		env\auth_config.env = env\auth_config.env
+		env\rabbitMq_config.env = env\rabbitMq_config.env
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +41,7 @@ Global
 		{FEFE2F2A-C4A4-4E95-8ADC-3B0DA4056643} = {D4C8C235-71D9-4729-96C5-56ABAED57919}
 		{10244BE4-80B7-4AC0-9893-A19CC22FF8E6} = {0F09D1E6-6311-4BA8-BEB7-EEF0C75DFA9E}
 		{F4FAF308-5180-4016-A7A2-90E786B49518} = {0F09D1E6-6311-4BA8-BEB7-EEF0C75DFA9E}
+		{6DBA090D-4A9D-4F50-8A4A-5374BA599092} = {C5939CF7-EF15-4E06-9856-EA1553A32A8A}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B54CFBA9-E492-4E89-B209-482979DF9ACD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
