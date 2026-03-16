@@ -30,7 +30,38 @@
       interval: 10s
       timeout: 5s
       retries: 10
+  
+  mongodb:
+    image: mongo:8
+    container_name: orders-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin123}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE:-orders_observability}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
       
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    container_name: orders-mongo-express
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin123}
+      - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-admin123}@mongodb:27017/
+      - ME_CONFIG_BASICAUTH=false  
+  
   orders-api:
     build:
       context: .
@@ -40,6 +71,8 @@
       sqlserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     environment:
       - ASPNETCORE_URLS=http://+:8080
@@ -57,6 +90,11 @@
       - RabbitMq__Exchange=orders
       - RabbitMq__Queue=orders.order-created
       - RabbitMq__RoutingKey=orders.order-created
+      - MongoDb__ConnectionString=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-admin123}@mongodb:27017
+      - MongoDb__DatabaseName=${MONGO_INITDB_DATABASE:-orders_observability}
+      - MongoDb__LogsCollectionName=application_logs
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=orders-api
     ports:
       - "8080:8080"
         
@@ -70,6 +108,8 @@
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
     environment:
       - ConnectionStrings__OrdersDb=Server=sqlserver,1433;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-P@ssw0rd};TrustServerCertificate=True;
       - RabbitMq__Host=rabbitmq
@@ -79,6 +119,74 @@
       - RabbitMq__Exchange=orders
       - RabbitMq__Queue=orders.order-created
       - RabbitMq__RoutingKey=orders.order-created
+      - MongoDb__ConnectionString=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-admin123}@mongodb:27017
+      - MongoDb__DatabaseName=${MONGO_INITDB_DATABASE:-orders_observability}
+      - MongoDb__LogsCollectionName=application_logs
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=orders-worker
+        
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: orders-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - orders-api
+      - orders-worker
+        
+  loki:
+    image: grafana/loki:latest
+    container_name: orders-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+        
+  grafana:
+    image: grafana/grafana:latest
+    container_name: orders-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - loki
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: orders-promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+        
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: orders-otel-collector
+    command: [ "--config=/etc/otel-collector-config.yml" ]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./observability/otel/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    depends_on:
+      - loki
 
 volumes:
   sql_data:
+  mongo_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:

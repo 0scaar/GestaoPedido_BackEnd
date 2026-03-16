@@ -29,6 +29,37 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "env", "env", "{6DBA090D-4A9
 		env\rabbitMq_config.env = env\rabbitMq_config.env
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "observability", "observability", "{5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prometheus", "prometheus", "{2282034B-D4C0-4882-8D86-B19B480AE0AA}"
+	ProjectSection(SolutionItems) = preProject
+		observability\prometheus\prometheus.yml = observability\prometheus\prometheus.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "loki", "loki", "{24B00706-F193-4E01-9F83-F90D48A0BCA8}"
+	ProjectSection(SolutionItems) = preProject
+		observability\loki\loki-config.yml = observability\loki\loki-config.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "promtail", "promtail", "{19497EF8-90A1-495E-B944-80CB853E1DD2}"
+	ProjectSection(SolutionItems) = preProject
+		observability\promtail\promtail-config.yml = observability\promtail\promtail-config.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana", "grafana", "{8EF0042B-1CA6-48A8-B824-A97D90DC2E55}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "otel", "otel", "{FD20443A-8CCF-42EC-8C92-BA32DA4A3B82}"
+	ProjectSection(SolutionItems) = preProject
+		observability\otel\otel-collector-config.yml = observability\otel\otel-collector-config.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provisioning", "provisioning", "{96739B40-1C9A-4A81-9507-2A21B822EAFD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources", "{3F23CB49-2D1A-4B75-ADEC-748D3C36D32B}"
+	ProjectSection(SolutionItems) = preProject
+		observability\grafana\provisioning\datasources\datasource.yml = observability\grafana\provisioning\datasources\datasource.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +73,14 @@ Global
 		{10244BE4-80B7-4AC0-9893-A19CC22FF8E6} = {0F09D1E6-6311-4BA8-BEB7-EEF0C75DFA9E}
 		{F4FAF308-5180-4016-A7A2-90E786B49518} = {0F09D1E6-6311-4BA8-BEB7-EEF0C75DFA9E}
 		{6DBA090D-4A9D-4F50-8A4A-5374BA599092} = {C5939CF7-EF15-4E06-9856-EA1553A32A8A}
+		{5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1} = {C5939CF7-EF15-4E06-9856-EA1553A32A8A}
+		{2282034B-D4C0-4882-8D86-B19B480AE0AA} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
+		{24B00706-F193-4E01-9F83-F90D48A0BCA8} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
+		{19497EF8-90A1-495E-B944-80CB853E1DD2} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
+		{8EF0042B-1CA6-48A8-B824-A97D90DC2E55} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
+		{FD20443A-8CCF-42EC-8C92-BA32DA4A3B82} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
+		{96739B40-1C9A-4A81-9507-2A21B822EAFD} = {8EF0042B-1CA6-48A8-B824-A97D90DC2E55}
+		{3F23CB49-2D1A-4B75-ADEC-748D3C36D32B} = {96739B40-1C9A-4A81-9507-2A21B822EAFD}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B54CFBA9-E492-4E89-B209-482979DF9ACD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

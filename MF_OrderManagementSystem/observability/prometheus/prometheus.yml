@@ -1,0 +1,17 @@
+﻿global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: orders-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["orders-api:8080"]
+
+  - job_name: orders-worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["orders-worker:9091"]
