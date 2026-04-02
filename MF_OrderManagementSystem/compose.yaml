@@ -124,6 +124,8 @@
       - MongoDb__LogsCollectionName=application_logs
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=orders-worker
+    ports:
+      - "9091:9091"
         
   prometheus:
     image: prom/prometheus:latest

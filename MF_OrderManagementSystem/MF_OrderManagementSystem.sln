@@ -60,6 +60,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources"
 		observability\grafana\provisioning\datasources\datasource.yml = observability\grafana\provisioning\datasources\datasource.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MF.OrderManagement.Observability", "src\MF.OrderManagement.Observability\MF.OrderManagement.Observability.csproj", "{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,7 @@ Global
 		{FD20443A-8CCF-42EC-8C92-BA32DA4A3B82} = {5FC4A2D6-CC74-4A1B-8795-8A61D4405AD1}
 		{96739B40-1C9A-4A81-9507-2A21B822EAFD} = {8EF0042B-1CA6-48A8-B824-A97D90DC2E55}
 		{3F23CB49-2D1A-4B75-ADEC-748D3C36D32B} = {96739B40-1C9A-4A81-9507-2A21B822EAFD}
+		{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA} = {0F09D1E6-6311-4BA8-BEB7-EEF0C75DFA9E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B54CFBA9-E492-4E89-B209-482979DF9ACD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -107,5 +110,9 @@ Global
 		{F4FAF308-5180-4016-A7A2-90E786B49518}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4FAF308-5180-4016-A7A2-90E786B49518}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4FAF308-5180-4016-A7A2-90E786B49518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DB4E79A-3222-4DA4-ADFC-459D93ABAADA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

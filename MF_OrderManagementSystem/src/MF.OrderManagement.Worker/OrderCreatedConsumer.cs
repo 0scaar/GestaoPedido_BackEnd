@@ -1,9 +1,12 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using MF.OrderManagement.Application.Orders.DTOs;
 using MF.OrderManagement.Domain.Entities.Deliveries;
 using MF.OrderManagement.Infrastructure.Messaging;
 using MF.OrderManagement.Infrastructure.Persistence;
+using MF.OrderManagement.Observability.Metrics;
+using MF.OrderManagement.Observability.Tracing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -15,14 +18,18 @@ public class OrderCreatedConsumer: BackgroundService
 {
     private readonly RabbitMqOptions _opt;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<OrderCreatedConsumer> _logger;
 
     private IConnection? _connection;
     private IModel? _channel;
 
-    public OrderCreatedConsumer(IOptions<RabbitMqOptions> options, IServiceScopeFactory scopeFactory)
+    public OrderCreatedConsumer(IOptions<RabbitMqOptions> options, 
+        IServiceScopeFactory scopeFactory,
+        ILogger<OrderCreatedConsumer> logger)
     {
         _opt = options.Value;
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
     
     public override Task StartAsync(CancellationToken cancellationToken)
@@ -67,6 +74,12 @@ public class OrderCreatedConsumer: BackgroundService
     
     private async Task HandleMessageAsync(object sender, BasicDeliverEventArgs ea)
     {
+        using var activity = TelemetryConstants.ActivitySource.StartActivity(
+            "worker.process-order-created",
+            ActivityKind.Consumer);
+
+        var stopwatch = Stopwatch.StartNew();
+        
         if (_channel is null) return;
 
         try
@@ -76,44 +89,67 @@ public class OrderCreatedConsumer: BackgroundService
 
             if (msg is null || msg.OrderId == Guid.Empty)
             {
+                _logger.LogWarning("Menssagem inválido recevedo pelo worker.");
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
                 return;
             }
+            
+            activity?.SetTag("order.id", msg.OrderId.ToString());
 
-            using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-
-            // Busca pedido para pegar OrderDate
-            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == msg.OrderId);
-            if (order is null)
+            using (_logger.BeginScope(new Dictionary<string, object>
+                   {
+                       ["OrderId"] = msg.OrderId
+                   }))
             {
-                // nada pra fazer, ack
-                _channel.BasicAck(ea.DeliveryTag, multiple: false);
-                return;
+                _logger.LogInformation("Procesando OrderCreated para OrderId {OrderId}", msg.OrderId);
+                
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
+
+                // Busca pedido para pegar OrderDate
+                var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == msg.OrderId);
+                if (order is null)
+                {
+                    _logger.LogWarning("Order {OrderId} no encontrado.", msg.OrderId);
+                    // nada pra fazer, ack
+                    _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                    return;
+                }
+                
+                // evita duplicar DeliveryTerms
+                var exists = await db.DeliveryTerms.AnyAsync(x => x.OrderId == order.Id);
+                if (!exists)
+                {
+                    var deliveryDays = 10;
+                    var delivery = new DeliveryTerms
+                    (
+                        id: Guid.NewGuid(),
+                        orderId: order.Id,
+                        estimatedDeliveryDate: order.OrderDate.AddDays(deliveryDays),
+                        deliveryDays: deliveryDays
+                    );
+
+                    db.DeliveryTerms.Add(delivery);
+                    await db.SaveChangesAsync();
+                    
+                    WorkerMetrics.DeliveryTermsCreated.Inc();
+                    _logger.LogInformation("DeliveryTerms criado para OrderId {OrderId}", msg.OrderId);
+                }
             }
 
-            // evita duplicar DeliveryTerms
-            var exists = await db.DeliveryTerms.AnyAsync(x => x.OrderId == order.Id);
-            if (!exists)
-            {
-                var deliveryDays = 10;
-                var delivery = new DeliveryTerms
-                (
-                    id: Guid.NewGuid(),
-                    orderId: order.Id,
-                    estimatedDeliveryDate: order.OrderDate.AddDays(deliveryDays),
-                    deliveryDays: deliveryDays
-                );
-
-                db.DeliveryTerms.Add(delivery);
-                await db.SaveChangesAsync();
-            }
-
+            WorkerMetrics.MessagesConsumed.Inc();
             _channel.BasicAck(ea.DeliveryTag, multiple: false);
         }
-        catch
+        catch(Exception ex)
         {
+            WorkerMetrics.MessagesFailed.Inc();
+            _logger.LogError(ex, "Erro processando menssgem do worker.");
             _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+        }
+        finally
+        {
+            stopwatch.Stop();
+            WorkerMetrics.ProcessingDuration.Observe(stopwatch.Elapsed.TotalSeconds);
         }
     }
 

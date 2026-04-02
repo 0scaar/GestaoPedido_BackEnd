@@ -25,6 +25,7 @@
     <ItemGroup>
       <ProjectReference Include="..\MF.OrderManagement.Application\MF.OrderManagement.Application.csproj" />
       <ProjectReference Include="..\MF.OrderManagement.Infrastructure\MF.OrderManagement.Infrastructure.csproj" />
+      <ProjectReference Include="..\MF.OrderManagement.Observability\MF.OrderManagement.Observability.csproj" />
     </ItemGroup>
 
 </Project>
